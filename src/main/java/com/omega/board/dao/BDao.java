@@ -106,6 +106,7 @@ public class BDao {
 			preparedStatement.setString(3, bContent);
 			
 			int result = preparedStatement.executeUpdate();
+			System.out.println(result);
 			
 		} catch (SQLException e) {
 			
