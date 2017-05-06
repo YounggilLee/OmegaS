@@ -13,11 +13,20 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+
 import com.omega.board.dto.BDto;
+import com.omega.board.util.Constant;
 
 public class BDao {
 
 	//DataSource dataSource;
+	
+	JdbcTemplate template = null;
+	
 	Connection connection = null;
 	PreparedStatement preparedStatement = null;
 	ResultSet resultSet = null;
@@ -35,12 +44,21 @@ public class BDao {
 		 * 
 		 * e.printStackTrace(); }
 		 */
+		
+		template = Constant.template;
 
 	}
 
 	public ArrayList<BDto> list() {
-
-		ArrayList<BDto> dtos = new ArrayList<BDto>();
+		ArrayList<BDto> dtos = null;
+		
+		String query = "SELECT bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent "
+				+ "FROM mvc_board order by bGroup DESC, bStep ASC";		
+		dtos = (ArrayList<BDto>)template.query(query, new BeanPropertyRowMapper<BDto>(BDto.class));
+		
+		return dtos;
+		
+		/*ArrayList<BDto> dtos = new ArrayList<BDto>();
 
 		try {
 			// connection = dataSource.getConnection();
@@ -86,21 +104,39 @@ public class BDao {
 			}
 		}
 
-		return dtos;
+		return dtos;*/
 
 	}
 
-	public void write(String bName, String bTitle, String bContent) {
+	public void write(final String bName, final String bTitle, final String bContent) {
 
-		try {
+		
+		
+		template.update(new PreparedStatementCreator() {
+			
+			@Override
+			public PreparedStatement createPreparedStatement(Connection arg0) throws SQLException {
+				// TODO Auto-generated method stub
+				String query = "insert into mvc_board(bId, bName, bTitle, bContent, bHit, bGroup, bStep, bIndent)"
+						+ "values(mvc_board_seq.nextval, ?, ?, ?, 0, mvc_board_seq.currval, 0, 0)";
+				PreparedStatement ps = connection.prepareStatement(query);
+				ps.setString(1, bName);
+				ps.setString(2, bTitle);
+				ps.setString(3, bContent);
+				
+				
+				return null;
+			}
+		});
+/*		try {
 			// connection = dataSource.getConnection();
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "insert into mvc_board(bId, bName, bTitle, bContent, bHit, bGroup, bStep, bIndent)"
 					+ "values(mvc_board_seq.nextval, ?, ?, ?, 0, mvc_board_seq.currval, 0, 0)";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, bName);
-			preparedStatement.setString(2, bTitle);
-			preparedStatement.setString(3, bContent);
+			PreparedStatement pstmt = connection.prepareStatement(query);
+			pstmt.setString(1, bName);
+			pstmt.setString(2, bTitle);
+			pstmt.setString(3, bContent);
 
 			int result = preparedStatement.executeUpdate();
 			System.out.println(result);
@@ -123,14 +159,22 @@ public class BDao {
 				e2.printStackTrace();
 
 			}
-		}
+		}*/
 
 	}
 
 	public BDto contentView(String strID) {
 
 		upHit(strID);
-		BDto dto = null;
+		
+		String query = "SELECT * FROM mvc_board WHERE bId = ?";
+		
+		BDto dto = template.queryForObject(query, new BeanPropertyRowMapper<BDto>(BDto.class));
+		
+		return dto;
+		
+		
+		/*BDto dto = null;
 
 		try {
 
@@ -177,21 +221,37 @@ public class BDao {
 
 		}
 
-		return dto;
+		return dto;*/
 
 	}
 
-	public void modify(String bId, String bName, String bTitle, String bContent) {
+	public void modify(final String bId, final String bName, final String bTitle,final String bContent) {
+		
+		
+		String query = "UPDATE mvc_board SET bName = ?, bTitle= ?, bContent = ? WHERE bId = ?";
+		template.update(query, new PreparedStatementSetter() {
+			
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				// TODO Auto-generated method stub
+				
+				ps.setString(1, bName);
+				ps.setString(2, bTitle);
+				ps.setString(3, bContent);
+				ps.setInt(4, Integer.parseInt(bId));
 
-		try {
+			}
+		});
+
+		/*try {
 
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "UPDATE mvc_board SET bName = ?, bTitle= ?, bContent = ? WHERE bId = ?";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, bName);
-			preparedStatement.setString(2, bTitle);
-			preparedStatement.setString(3, bContent);
-			preparedStatement.setInt(4, Integer.parseInt(bId));
+			PreparedStatement ps = connection.prepareStatement(query);
+			ps.setString(1, bName);
+			ps.setString(2, bTitle);
+			ps.setString(3, bContent);
+			ps.setInt(4, Integer.parseInt(bId));
 
 			int result = preparedStatement.executeUpdate();
 
@@ -214,17 +274,32 @@ public class BDao {
 			}
 
 		}
-
+*/
 	}
 	
 	
-	public void delete(String strID){
-		try {
+	public void delete(final String strID){
+		
+		String query = "DELETE FROM mvc_board WHERE bId = ?";
+		
+		template.update(query, new PreparedStatementSetter() {
+			
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				// TODO Auto-generated method stub
+				
+				ps.setInt(1, Integer.parseInt(strID));
+				
+			}
+		});
+		
+		
+		/*try {
 
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "DELETE FROM mvc_board WHERE bId = ?";
-			preparedStatement = connection.prepareStatement(query);			
-			preparedStatement.setInt(1, Integer.parseInt(strID));
+			PreparedStatement ps = connection.prepareStatement(query);			
+			ps.setInt(1, Integer.parseInt(strID));
 
 			int result = preparedStatement.executeUpdate();
 
@@ -246,7 +321,7 @@ public class BDao {
 				e2.printStackTrace();
 			}
 
-		}
+		}*/
 		
 	}
 
@@ -255,7 +330,13 @@ public class BDao {
 	public BDto reply_view(String strID) {
 		// TODO Auto-generated method stub
 		
-		BDto dto = null;
+		String query = "SELECT * FROM mvc_board WHERE bId = ?";
+		
+		BDto dto =template.queryForObject(query, new BeanPropertyRowMapper<BDto>(BDto.class));
+		
+		return dto;
+		
+		/*BDto dto = null;
 		
 		try {
 
@@ -302,26 +383,43 @@ public class BDao {
 
 		}
 		
-		return dto;
+		return dto;*/
 
 	}
 	
 	
-	public void reply(String bId, String bName, String bTitle, String bContent, String bGroup, String bStep, String bIndent){
+	public void reply(final String bId, final String bName, final String bTitle, final String bContent, final String bGroup, final String bStep, final String bIndent){
 		
-		replyShape(bGroup, bStep);
 		
-		try {
+		String query = "INSERT INTO mvc_board(bId, bName, bTitle, bContent, bGroup, bStep, bIndent) VALUES(mvc_board_seq.nextval,?,?,?,?,?,?)";
+		template.update(query, new PreparedStatementSetter() {
+			
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				// TODO Auto-generated method stub
+				ps.setString(1, bName);
+				ps.setString(2, bTitle);
+				ps.setString(3, bContent);
+				ps.setInt(4, Integer.parseInt(bGroup));
+				ps.setInt(5, Integer.parseInt(bStep) + 1);
+				ps.setInt(6, Integer.parseInt(bIndent) + 1);
+				
+			}
+		});
+		
+		//replyShape(bGroup, bStep);
+		
+		/*try {
 
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "INSERT INTO mvc_board(bId, bName, bTitle, bContent, bGroup, bStep, bIndent) VALUES(mvc_board_seq.nextval,?,?,?,?,?,?)";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, bName);
-			preparedStatement.setString(2, bTitle);
-			preparedStatement.setString(3, bContent);
-			preparedStatement.setInt(4, Integer.parseInt(bGroup));
-			preparedStatement.setInt(5, Integer.parseInt(bStep) + 1);
-			preparedStatement.setInt(6, Integer.parseInt(bIndent) + 1);
+			PreparedStatement ps = connection.prepareStatement(query);
+			ps.setString(1, bName);
+			ps.setString(2, bTitle);
+			ps.setString(3, bContent);
+			ps.setInt(4, Integer.parseInt(bGroup));
+			ps.setInt(5, Integer.parseInt(bStep) + 1);
+			ps.setInt(6, Integer.parseInt(bIndent) + 1);
 
 			int result = preparedStatement.executeUpdate();
 
@@ -344,19 +442,32 @@ public class BDao {
 			}
 
 		}
-
+*/
 	}
 	
 
-	private void replyShape(String strGroup, String strStep){
+	private void replyShape(final String strGroup, final String strStep){
 		
-		try {
+		String query = "UPDATE mvc_board SET bStep = bStep + 1 WHERE bGroup = ? and bStep > ?";
+		
+template.update(query, new PreparedStatementSetter() {
+			
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				// TODO Auto-generated method stub
+			
+				ps.setInt(1, Integer.parseInt(strGroup));
+				ps.setInt(2, Integer.parseInt(strStep));
+			}
+		});
+		
+	/*	try {
 
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "UPDATE mvc_board SET bStep = bStep + 1 WHERE bGroup = ? and bStep > ?";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setInt(1, Integer.parseInt(strGroup));
-			preparedStatement.setInt(2, Integer.parseInt(strStep));
+			PreparedStatement ps = connection.prepareStatement(query);
+			ps.setInt(1, Integer.parseInt(strGroup));
+			ps.setInt(2, Integer.parseInt(strStep));
 
 			int result = preparedStatement.executeUpdate();
 
@@ -378,12 +489,24 @@ public class BDao {
 				e2.printStackTrace();
 			}
 
-		}
+		}*/
 	}
 	
-	private void upHit(String bId) {
+	private void upHit(final String bId) {
+		
+		String query = "UPDATE mvc_board SET bHit = bHit + 1 WHERE bId = ?";
+		
+		template.update(query, new PreparedStatementSetter() {
+			
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				// TODO Auto-generated method stub
+				ps.setInt(1, Integer.parseInt(bId));
+			}
+		});
+		
 
-		try {
+		/*try {
 
 			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "UPDATE mvc_board SET bHit = bHit + 1 WHERE bId = ?";
@@ -411,7 +534,7 @@ public class BDao {
 			}
 
 		}
-
+*/
 	}
 
 }
