@@ -18,6 +18,12 @@ import com.omega.board.dto.BDto;
 public class BDao {
 	
 	DataSource dataSource;
+	Connection connection = null;
+	PreparedStatement preparedStatement = null;
+	ResultSet resultSet = null;
+	String url = "jdbc:oracle:thin:@localhost:1521:xe";
+	String uid = "scott";
+	String upw = "1234";
 	
 	
 	public BDao(){
@@ -36,12 +42,7 @@ public class BDao {
 	public ArrayList<BDto> list(){
 		
 		ArrayList<BDto> dtos = new ArrayList<BDto>();
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-		String url = "jdbc:oracle:thin:@localhost:1521:xe";
-		String uid = "scott";
-		String upw = "1234";
+		
 		
 		try{
 			//connection = dataSource.getConnection();
@@ -69,6 +70,7 @@ public class BDao {
 		}catch(Exception e){
 			
 			e.printStackTrace();
+			
 		}finally{
 			
 				try {
@@ -90,11 +92,7 @@ public class BDao {
 	
 	public void write(String bName, String bTitle, String bContent){
 		
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		String url = "jdbc:oracle:thin:@localhost:1521:xe";
-		String uid = "scott";
-		String upw = "1234";
+		
 		
 		try {
 			//connection = dataSource.getConnection();
@@ -126,6 +124,91 @@ public class BDao {
 				
 				}
 			}
+		
+	}
+	
+	public BDto contentView(String strID){
+		
+		upHit(strID);		
+		BDto dto = null;		
+		
+		try {
+			
+			connection = DriverManager.getConnection(url,uid,upw);
+			String query = "SELECT * FROM mvc_board WHERE bId = ?";
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setInt(1, Integer.parseInt(strID));			
+			resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()){
+				int bId = resultSet.getInt("bId");
+				String bName = resultSet.getString("bName");
+				String bTitle = resultSet.getString("bTitle");
+				String bContent = resultSet.getString("bContent");
+				Timestamp bDate = resultSet.getTimestamp("bDate");
+				int bHit = resultSet.getInt("bHit");
+				int bGroup = resultSet.getInt("bGroup");
+				int bStep = resultSet.getInt("bStep");
+				int bIndent = resultSet.getInt("bIndent");
+				
+				dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
+				
+			}
+			
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+			
+		}finally{
+			
+			
+				try {
+					
+					if(resultSet != null) resultSet.close();
+					if(preparedStatement != null) preparedStatement.close();
+					if(connection != null) connection.close();
+					
+				} catch (SQLException e2) {
+
+					e2.printStackTrace();
+				}			
+			
+		}		
+		
+		
+		return dto;
+		
+	}
+	
+	private void upHit(String bId){
+		
+		try {
+			
+			connection = DriverManager.getConnection(url,uid,upw);
+			String query = "UPDATE mvc_board SET bHit = bHit + 1 WHERE bId = ?";
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setString(1, bId);
+			
+			int result = preparedStatement.executeUpdate();
+			
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+			
+		}finally{
+			
+			
+				try {
+					
+					if(preparedStatement != null) preparedStatement.close();
+					if(connection != null) connection.close();
+					
+				} catch (SQLException e2) {
+
+					e2.printStackTrace();
+				}			
+			
+		}		
 		
 	}
 	
