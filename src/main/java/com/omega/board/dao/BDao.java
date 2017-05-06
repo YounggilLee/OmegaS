@@ -46,9 +46,10 @@ public class BDao {
 		try{
 			//connection = dataSource.getConnection();
 			connection = DriverManager.getConnection(url,uid,upw);
-			String query  = "select bId, bName, bTitle, bContent, bDate, bHit, bGrouop, bStep, bIndent"
-					+ "from mvc_board order by bGroup desc, bSteop asc";
+			String query  = "SELECT bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent "
+					+ "FROM mvc_board order by bGroup DESC, bStep ASC";
 			preparedStatement = connection.prepareStatement(query);
+			resultSet = preparedStatement.executeQuery();
 			
 			while(resultSet.next()){
 				int bId = resultSet.getInt("bId");
