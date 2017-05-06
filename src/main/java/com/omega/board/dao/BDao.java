@@ -16,43 +16,41 @@ import javax.sql.DataSource;
 import com.omega.board.dto.BDto;
 
 public class BDao {
-	
-	DataSource dataSource;
+
+	//DataSource dataSource;
 	Connection connection = null;
 	PreparedStatement preparedStatement = null;
 	ResultSet resultSet = null;
 	String url = "jdbc:oracle:thin:@localhost:1521:xe";
 	String uid = "scott";
 	String upw = "1234";
-	
-	
-	public BDao(){
-		
-	/*	try {
-			Context context = new InitialContext();
-			dataSource = (DataSource) context.lookup("java:comp/env/jdbc/Oracle11g");
-			
-		} catch (NamingException e) {
-			
-			e.printStackTrace();
-		}*/	
-		
+
+	public BDao() {
+
+		/*
+		 * try { Context context = new InitialContext(); dataSource =
+		 * (DataSource) context.lookup("java:comp/env/jdbc/Oracle11g");
+		 * 
+		 * } catch (NamingException e) {
+		 * 
+		 * e.printStackTrace(); }
+		 */
+
 	}
-	
-	public ArrayList<BDto> list(){
-		
+
+	public ArrayList<BDto> list() {
+
 		ArrayList<BDto> dtos = new ArrayList<BDto>();
-		
-		
-		try{
-			//connection = dataSource.getConnection();
-			connection = DriverManager.getConnection(url,uid,upw);
-			String query  = "SELECT bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent "
+
+		try {
+			// connection = dataSource.getConnection();
+			connection = DriverManager.getConnection(url, uid, upw);
+			String query = "SELECT bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent "
 					+ "FROM mvc_board order by bGroup DESC, bStep ASC";
 			preparedStatement = connection.prepareStatement(query);
 			resultSet = preparedStatement.executeQuery();
-			
-			while(resultSet.next()){
+
+			while (resultSet.next()) {
 				int bId = resultSet.getInt("bId");
 				String bName = resultSet.getString("bName");
 				String bTitle = resultSet.getString("bTitle");
@@ -62,85 +60,87 @@ public class BDao {
 				int bGroup = resultSet.getInt("bGroup");
 				int bStep = resultSet.getInt("bStep");
 				int bIndent = resultSet.getInt("bIndent");
-				
+
 				BDto dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
 				dtos.add(dto);
-						
+
 			}
-		}catch(Exception e){
-			
+		} catch (Exception e) {
+
 			e.printStackTrace();
-			
-		}finally{
-			
-				try {
-					
-					if(resultSet != null) resultSet.close();
-					if(preparedStatement != null) preparedStatement.close();
-					if(connection != null) connection.close();
-					
-				} catch (SQLException e2) {
-				
-					e2.printStackTrace();
-				}
+
+		} finally {
+
+			try {
+
+				if (resultSet != null)
+					resultSet.close();
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (SQLException e2) {
+
+				e2.printStackTrace();
+			}
 		}
-		
-		
+
 		return dtos;
-		
+
 	}
-	
-	public void write(String bName, String bTitle, String bContent){
-		
-		
-		
+
+	public void write(String bName, String bTitle, String bContent) {
+
 		try {
-			//connection = dataSource.getConnection();
-			connection = DriverManager.getConnection(url,uid,upw);
-			String query  = "insert into mvc_board(bId, bName, bTitle, bContent, bHit, bGroup, bStep, bIndent)"
+			// connection = dataSource.getConnection();
+			connection = DriverManager.getConnection(url, uid, upw);
+			String query = "insert into mvc_board(bId, bName, bTitle, bContent, bHit, bGroup, bStep, bIndent)"
 					+ "values(mvc_board_seq.nextval, ?, ?, ?, 0, mvc_board_seq.currval, 0, 0)";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, bName);
 			preparedStatement.setString(2, bTitle);
 			preparedStatement.setString(3, bContent);
-			
+
 			int result = preparedStatement.executeUpdate();
 			System.out.println(result);
-			
+
 		} catch (SQLException e) {
-			
+
 			e.printStackTrace();
-			
-		}finally{
-			
-			try{	
-				
-				if(preparedStatement != null) preparedStatement.close();
-				if(connection != null) connection.close();
-				
-				}catch(Exception e2){
-				
-					e2.printStackTrace();
-				
-				}
+
+		} finally {
+
+			try {
+
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (Exception e2) {
+
+				e2.printStackTrace();
+
 			}
-		
+		}
+
 	}
-	
-	public BDto contentView(String strID){
-		
-		upHit(strID);		
-		BDto dto = null;		
-		
+
+	public BDto contentView(String strID) {
+
+		upHit(strID);
+		BDto dto = null;
+
 		try {
-			
-			connection = DriverManager.getConnection(url,uid,upw);
+
+			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "SELECT * FROM mvc_board WHERE bId = ?";
 			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setInt(1, Integer.parseInt(strID));			
+			preparedStatement.setInt(1, Integer.parseInt(strID));
 			resultSet = preparedStatement.executeQuery();
-			
-			if(resultSet.next()){
+
+			if (resultSet.next()) {
 				int bId = resultSet.getInt("bId");
 				String bName = resultSet.getString("bName");
 				String bTitle = resultSet.getString("bTitle");
@@ -150,67 +150,139 @@ public class BDao {
 				int bGroup = resultSet.getInt("bGroup");
 				int bStep = resultSet.getInt("bStep");
 				int bIndent = resultSet.getInt("bIndent");
-				
-				dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
-				
-			}
-			
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-			
-		}finally{
-			
-			
-				try {
-					
-					if(resultSet != null) resultSet.close();
-					if(preparedStatement != null) preparedStatement.close();
-					if(connection != null) connection.close();
-					
-				} catch (SQLException e2) {
 
-					e2.printStackTrace();
-				}			
-			
-		}		
-		
-		
+				dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
+
+			}
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (resultSet != null)
+					resultSet.close();
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (SQLException e2) {
+
+				e2.printStackTrace();
+			}
+
+		}
+
 		return dto;
-		
+
+	}
+
+	public void modify(String bId, String bName, String bTitle, String bContent) {
+
+		try {
+
+			connection = DriverManager.getConnection(url, uid, upw);
+			String query = "UPDATE mvc_board SET bName = ?, bTitle= ?, bContent = ? WHERE bId = ?";
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setString(1, bName);
+			preparedStatement.setString(2, bTitle);
+			preparedStatement.setString(3, bContent);
+			preparedStatement.setInt(4, Integer.parseInt(bId));
+
+			int result = preparedStatement.executeUpdate();
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (SQLException e2) {
+
+				e2.printStackTrace();
+			}
+
+		}
+
 	}
 	
-	private void upHit(String bId){
-		
+	
+	public void delete(String strID){
 		try {
-			
-			connection = DriverManager.getConnection(url,uid,upw);
+
+			connection = DriverManager.getConnection(url, uid, upw);
+			String query = "DELETE FROM mvc_board WHERE bId = ?";
+			preparedStatement = connection.prepareStatement(query);			
+			preparedStatement.setInt(1, Integer.parseInt(strID));
+
+			int result = preparedStatement.executeUpdate();
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (SQLException e2) {
+
+				e2.printStackTrace();
+			}
+
+		}
+		
+	}
+
+	
+
+	private void upHit(String bId) {
+
+		try {
+
+			connection = DriverManager.getConnection(url, uid, upw);
 			String query = "UPDATE mvc_board SET bHit = bHit + 1 WHERE bId = ?";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, bId);
-			
-			int result = preparedStatement.executeUpdate();
-			
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-			
-		}finally{
-			
-			
-				try {
-					
-					if(preparedStatement != null) preparedStatement.close();
-					if(connection != null) connection.close();
-					
-				} catch (SQLException e2) {
 
-					e2.printStackTrace();
-				}			
-			
-		}		
-		
+			int result = preparedStatement.executeUpdate();
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (preparedStatement != null)
+					preparedStatement.close();
+				if (connection != null)
+					connection.close();
+
+			} catch (SQLException e2) {
+
+				e2.printStackTrace();
+			}
+
+		}
+
 	}
-	
-	
+
 }
