@@ -23,7 +23,7 @@
 				<td> <textarea name="bContent" rows="10" ></textarea> </td>
 			</tr>
 			<tr >
-				<td colspan="2"> <input type="submit" value="enter"> &nbsp;&nbsp; <a href="list.do">List View</a></td>
+				<td colspan="2"> <input type="submit" value="Register"> &nbsp;&nbsp; <a href="list.do">List View</a></td>
 			</tr>
 		</form>
 	</table>
